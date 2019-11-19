@@ -4,34 +4,32 @@ import java.util.Random;
 
 public class Posicao {
 	
-	private float cord_x; 	
-	private float cord_y; 
+	private int cord_x; 	
+	private int cord_y; 
 	
 	public Posicao() { 
-		// gera posição aleatória de [0..100] (depois altera-se conforme tam grelha) no (x,y)
-		Random rand = new Random();
-		this.cord_x = (float) rand.nextFloat()*100;; 
-		this.cord_y = (float) rand.nextFloat()*100;;
+		this.cord_x = 0; 
+		this.cord_y = 0;
 	} 
 	
-	public Posicao(float x, float y) { 
+	public Posicao(int x, int y) { 
 		this.cord_x = x; 
 		this.cord_y = y;
 	}
 	
-	public float getCordX() { 
+	public int getCordX() { 
 		return this.cord_x;
 	}
 	
-	public float getCordY() { 
+	public int getCordY() { 
 		return this.cord_y;
 	}
 
-	public void setCordX(float x) { 
+	public void setCordX(int x) { 
 		this.cord_x = x;
 	}
 
-	public void setCordY(float y) { 
+	public void setCordY(int y) { 
 		this.cord_y = y;
 	}
 }
