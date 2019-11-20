@@ -1,6 +1,6 @@
 package Classes;
 
-public class InfoIncendio {
+public class InfoIncendio implements java.io.Serializable{
 	
 	// posição do incêndio
 	private Posicao p; 
@@ -10,6 +10,11 @@ public class InfoIncendio {
 	public InfoIncendio() { 
 		p = new Posicao(); 
 		gravidade = 0;
+	} 
+	
+	public InfoIncendio(InfoIncendio i) { 
+		this.p = i.getPos(); 
+		this.gravidade = i.getGravidade();
 	}
 	
 	public InfoIncendio(Posicao pos,int grav) { 

@@ -2,7 +2,7 @@ package Classes;
 
 import java.util.Random;
 
-public class Posicao {
+public class Posicao implements java.io.Serializable {
 	
 	private int cord_x; 	
 	private int cord_y; 

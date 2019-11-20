@@ -13,8 +13,10 @@ public class AeronaveAgent extends FirefightersAgent{
 		// começa com 15 de capacidade atual de agua 
 		setCapAtAgua(15); 
 		// começa com 20 de capacidade atual de comb 
-		setCapAtComb(20);
-						
+		setCapAtComb(20); 
+		// velocidade 
+		setCapVel(2);
+		
 		System.out.println("Agent drone " + this.getLocalName() + " inicializado com cap atual de agua " + getCapAtAgua());
 	}
 	

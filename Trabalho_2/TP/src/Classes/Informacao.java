@@ -1,6 +1,6 @@
 package Classes;
 
-public class Informacao {
+public class Informacao implements java.io.Serializable {
 	
 	// posição do agente
 	private Posicao p;  
