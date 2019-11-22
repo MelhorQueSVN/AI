@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import Classes.InfoEscolhido;
 import Classes.InfoIncendio;
 import Classes.Informacao;
 import Classes.Posicao;
@@ -26,14 +27,16 @@ public class QuartelAgent extends Agent {
 	private static final long serialVersionUID = 1L;
 
 	private HashMap<AID,Informacao> infoAgentes; 
-	private List<InfoIncendio> infoIncendios; 
+	private List<InfoIncendio> infoIncendios;  
+	public static List<Posicao> lista_combustiveis; 
+	public static List<Posicao> lista_aguas;
 	
 	public void setup() { 
 		
 		this.infoAgentes = new HashMap<>(); 
 		this.infoIncendios = new ArrayList<>();  
 		
-		// regista agente nas páginas amarelas
+		// regista agente nas pï¿½ginas amarelas
 		DFAgentDescription dfd = new DFAgentDescription(); 
 		dfd.setName(getAID()); 
 		ServiceDescription sd = new ServiceDescription(); 
@@ -44,8 +47,39 @@ public class QuartelAgent extends Agent {
 			DFService.register(this,dfd);
 		} catch (FIPAException e) {
 			e.printStackTrace();
-		}	
-	
+		}	 
+		
+		lista_combustiveis = new ArrayList<>(); 
+		lista_aguas = new ArrayList<>();
+		
+		/* 
+		 * 	Declara posicÃµes dos postos de combustÃ­vel
+		 */
+		Posicao c_p1 = new Posicao(10,12); 
+		Posicao c_p2 = new Posicao(60,30); 
+		Posicao c_p3 = new Posicao(30,47); 
+		Posicao c_p4 = new Posicao(78,63); 
+		Posicao c_p5 = new Posicao(90,14);
+		lista_combustiveis.add(c_p1); 
+		lista_combustiveis.add(c_p2); 
+		lista_combustiveis.add(c_p3); 
+		lista_combustiveis.add(c_p4); 
+		lista_combustiveis.add(c_p5);
+		
+		/* 
+		 * Declara posiÃ§Ãµes dos postos de abastecimento de Ã¡gua 
+		 */ 
+		Posicao a_p1 = new Posicao(12,50); 
+		Posicao a_p2 = new Posicao(73,13); 
+		Posicao a_p3 = new Posicao(84,41); 
+		Posicao a_p4 = new Posicao(30,75); 
+		Posicao a_p5 = new Posicao(75,90); 
+		lista_aguas.add(a_p1); 
+		lista_aguas.add(a_p2); 
+		lista_aguas.add(a_p3); 
+		lista_aguas.add(a_p4); 
+		lista_aguas.add(a_p5);
+		
 		addBehaviour(new RecebePedidosInc(this)); 
 	} 
 	
@@ -69,18 +103,19 @@ public class QuartelAgent extends Agent {
 			this.quartel = q;
 		} 
 		
-		// dentro da hashmap e dada a posição do incêndio retorna o AID do agente mais rápido para chegar ao incêndio
-		public AID mais_rapido(HashMap<AID,Informacao> agentes, Posicao p) {
+		// dentro da hashmap e dada a posiï¿½ï¿½o do incï¿½ndio retorna o AID do agente mais rï¿½pido para chegar ao incï¿½ndio
+		public InfoEscolhido mais_rapido(HashMap<AID,Informacao> agentes, Posicao p) {
 			AID atual; 
 			AID min; 
 			double dist_atual;  
 			double rapido_atual, rapido_min; 
 			rapido_min = 1000;
-			min = null;
+			min = null; 
+			InfoEscolhido i = new InfoEscolhido();
 			for(Entry<AID,Informacao> entry : agentes.entrySet()) { 
 				dist_atual =  Math.sqrt(Math.pow((p.getCordX() - entry.getValue().getPos().getCordX()),2) 
 							+ Math.pow((p.getCordY() - entry.getValue().getPos().getCordY()),2));  
-				System.out.println("DISTÂNCIA ENTRE AGENTE E FOGO: " + dist_atual);
+				System.out.println("DISTï¿½NCIA ENTRE AGENTE E FOGO: " + dist_atual);
 				rapido_atual = (dist_atual) / (entry.getValue().getVelocidade());  
 				System.out.println("rapido_atual " + rapido_atual);
 				atual = entry.getKey();
@@ -89,31 +124,34 @@ public class QuartelAgent extends Agent {
 					min = atual; 
 					System.out.println("AGENTE MIN: " + min);
 				}
-			}
-			System.out.println("Agente mais rápido: " + min);
-			return min;
+			} 
+			i.setPosicao(p);
+			i.setAgente(min); 
+			i.setTempo(rapido_min);
+			System.out.println("Agente mais rï¿½pido: " + min);
+			return i;
 		}
 		
 		@Override
 		public void action() {
 			ACLMessage msg = receive(); 
 			if (msg != null) { 
-				// recebe informaçõe do incendiário e manda propostas para os firefighters
+				// recebe informaï¿½ï¿½e do incendiï¿½rio e manda propostas para os firefighters
 				if (msg.getPerformative() == ACLMessage.INFORM) { 
-					// instancia objeto infoincêndio e coloca no array de incêndios
+					// instancia objeto infoincï¿½ndio e coloca no array de incï¿½ndios
 					//InfoIncendio inf =  new InfoIncendio();
 					try {
 						InfoIncendio inf = (InfoIncendio) msg.getContentObject();
 						quartel.getInfoIncendios().add(inf);  
 						inc_atual = inf.getPos();
-						System.out.println("Recebi mensagem de incêndio com posição: " + inf.getPos().getCordX() + " " + inf.getPos().getCordY());
+						System.out.println("Recebi mensagem de incï¿½ndio com posiï¿½ï¿½o: " + inf.getPos().getCordX() + " " + inf.getPos().getCordY());
 					} catch (UnreadableException e) {
 						e.printStackTrace();
 					}
-					// retira a lista de incêndios do quartel e adiciona o incêndio que recebeu do incendiário
+					// retira a lista de incï¿½ndios do quartel e adiciona o incï¿½ndio que recebeu do incendiï¿½rio
 					//quartel.getInfoIncendios().add(inf); 
-					//System.out.println("Recebi mensagem de incêndio com posição: " + inf.getPos().getCordX() + " " + inf.getPos().getCordY());
-					// agora pesquisa nas páginas amarelas pelos firefighters 
+					//System.out.println("Recebi mensagem de incï¿½ndio com posiï¿½ï¿½o: " + inf.getPos().getCordX() + " " + inf.getPos().getCordY());
+					// agora pesquisa nas pï¿½ginas amarelas pelos firefighters 
 					DFAgentDescription template = new DFAgentDescription(); 
 					ServiceDescription sd = new ServiceDescription(); 
 					sd.setType("firefighter"); 
@@ -138,29 +176,50 @@ public class QuartelAgent extends Agent {
 				// recebe resposta dos firefighters
 				} else if (msg.getPerformative() == ACLMessage.PROPOSE) { 
 					AID fire = msg.getSender(); 
-					Posicao inc_a_apagar = inc_atual;  
+					Posicao inc_a_apagar = inc_atual; 
+					InfoEscolhido inf = new InfoEscolhido(); 
 					try {
 						Informacao i = (Informacao) msg.getContentObject(); 
+						// atualiza o hashmap dos agentes.
 						quartel.getInfoAgentes().put(fire,i);
 						recebidos++; 
 						// espera que receba todos os proposals dos firefighters
 						if (recebidos == num_agents) { 
-							AID escolhido = mais_rapido(quartel.getInfoAgentes(),inc_a_apagar); 
+							inf = mais_rapido(quartel.getInfoAgentes(),inc_a_apagar); 
 							ACLMessage msg_escolhido = new ACLMessage(ACLMessage.PROPOSE);  
-							msg_escolhido.addReceiver(escolhido);
+							msg_escolhido.addReceiver(inf.getAgente());
 							try {
-								msg_escolhido.setContentObject(inc_a_apagar); 
+								msg_escolhido.setContentObject(inf); 
 							} catch (IOException e) {
 								e.printStackTrace();
 							} 
-							System.out.println("Enviada mensagem para agente mais rápido " + escolhido);
+							System.out.println("Enviada mensagem para agente mais rÃ¡pido " + inf.getAgente());
 							send(msg_escolhido);
 						}
 					
 					} catch (UnreadableException e) {
 						e.printStackTrace();
 					} 
-					
+				// se receber um refuse da proposta no firefighteragents
+				} else if (msg.getPerformative() == ACLMessage.REFUSE) { 
+					try { 
+						InfoEscolhido inf = (InfoEscolhido) msg.getContentObject(); 
+						AID recebido = inf.getAgente(); 
+						// remove a instÃ¢ncia deste da agente da HashMap, uma vez que deu refuse
+						infoAgentes.remove(recebido); 
+						InfoEscolhido mais_rapido = mais_rapido(quartel.getInfoAgentes(),inf.getPosicao());  
+						System.out.println("Escolhi o segundo mais rÃ¡pido!\n"); 
+						ACLMessage msg_segundo_escolhido = new ACLMessage(ACLMessage.PROPOSE); 
+						msg_segundo_escolhido.addReceiver(mais_rapido.getAgente()); 
+						try {
+							msg_segundo_escolhido.setContentObject(mais_rapido);
+						} catch (IOException e) {
+							e.printStackTrace();
+						} 
+						send(msg_segundo_escolhido); 
+					} catch (UnreadableException e) {
+						e.printStackTrace();
+					} 
 				}
 			}
 		} 

@@ -1,8 +1,10 @@
 package Agents;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Random;
 
+import Classes.InfoEscolhido;
 import Classes.Informacao;
 import Classes.Posicao;
 import jade.core.Agent;
@@ -12,29 +14,30 @@ import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.UnreadableException;
 
 public class FirefightersAgent extends Agent{
 	
 	private static final long serialVersionUID = 1L;
 	
-	// posiÁ„o do agente
+	// posiÔøΩÔøΩo do agente
 	private Posicao p;  
-	// capacidade m·xima de ·gua
+	// capacidade mÔøΩxima de ÔøΩgua
 	private int cap_max_agua;  
-	// capacidade m·xima de combustÌvel 
+	// capacidade mÔøΩxima de combustÔøΩvel 
 	private float cap_max_comb;  
-	// capacidade atual de ·gua 
+	// capacidade atual de ÔøΩgua 
 	private int cap_atual_agua; 
-	// capacidade atual de combustÌvel
+	// capacidade atual de combustÔøΩvel
 	private float cap_atual_comb; 
 	// velocidade do agente 
 	private int velocidade; 
-	// est· disponÌvel para apagar incendios ou n„o? 
+	// estÔøΩ disponÔøΩvel para apagar incendios ou nÔøΩo? 
 	private boolean disponivel;
 	
 	public void setup() { 
 		/* 
-		 * 	Gera coordenas aleatorÌas que variam de [0..100] no x e y
+		 * 	Gera coordenas aleatorÔøΩas que variam de [0..100] no x e y
 		 */
 		this.p = new Posicao(); 
 		Random rand = new Random();
@@ -42,11 +45,11 @@ public class FirefightersAgent extends Agent{
 		int cord_y = (int) rand.nextInt(101);
 		p.setCordX(cord_x); 
 		p.setCordY(cord_y);
-		// coloca-se como disponÌvel  
-		this.disponivel = true;  
+		// coloca-se como dispon√≠vel todos os agentes 
+		this.disponivel = false;
 		
 		/* 
-		 * 	Regista os agentes firefighters nas p·ginas amarelas 
+		 * 	Regista os agentes firefighters nas pÔøΩginas amarelas 
 		 */ 		
 		DFAgentDescription dfd = new DFAgentDescription(); 
 		dfd.setName(getAID()); 
@@ -81,7 +84,7 @@ public class FirefightersAgent extends Agent{
 	public float getCapAtComb() {return this.cap_atual_comb;} 
 	public int getVelocidade() {return this.velocidade;} 
 	public Posicao getPosicao() {return this.p;} 
-
+	public boolean getDisponivel() {return this.disponivel;}
 	
 	public class RecebePedidos extends CyclicBehaviour{
 		
@@ -91,12 +94,55 @@ public class FirefightersAgent extends Agent{
 			this.fire = f;
 		}
 		
+		// fun√ß√£o que dada a posi√ß√£o do inc√™ndio verifica se possui o combust√≠vel necess√°rio para chegar
+		// a essa dada posi√ß√£o.
+		public boolean verificaCombustivel(Posicao p) { 
+			Posicao pos_agent = fire.getPosicao();
+			// gasta 0.1 de combust√≠vel por cada movimento
+			float gasto_comb = (float) 0.1;
+			double dist =  Math.sqrt(Math.pow((p.getCordX() - pos_agent.getCordX()),2) 
+						   + Math.pow((p.getCordY() - pos_agent.getCordY()),2));   
+			double comb_necessario = dist * gasto_comb; 
+			if (comb_necessario > fire.getCapAtComb()) { 
+				return false;
+			} else { 
+				return true;
+			}
+		} 
+		
+		// retorna posi√ß√£o do posto de abastecimento + pr√≥ximo
+		public Posicao postoAbastecimentoMaisPerto(List<Posicao> abastecimentos) { 
+			Posicao pos_agent = fire.getPosicao(); 
+			Posicao pos_min = new Posicao(); 
+			double dist_min = 1000;
+			for (Posicao p : abastecimentos) { 
+				double dist = Math.sqrt(Math.pow((p.getCordX() - pos_agent.getCordX()),2) 
+						   + Math.pow((p.getCordY() - pos_agent.getCordY()),2));   
+				if (dist < dist_min) { 
+					dist_min = dist; 
+					pos_min = p;
+				}
+			}
+			return pos_min;
+		}
+		
+		// calcula o tempo que demora a abastecer e a chegar ao inc√™ndio
+		public double calculaTempo( Posicao p, Posicao inc) { 
+			Posicao pos_agent = fire.getPosicao();
+			double dist_ag_abastecer = Math.sqrt(Math.pow((p.getCordX() - pos_agent.getCordX()),2) 
+					   + Math.pow((p.getCordY() - pos_agent.getCordY()),2));  
+			double dist_ab_inc = Math.sqrt(Math.pow((p.getCordX() - inc.getCordX()),2) 
+					   + Math.pow((p.getCordY() - inc.getCordY()),2));  
+			double dist_total = dist_ag_abastecer + dist_ab_inc; 
+			return (dist_total)/(fire.getVelocidade());
+		}
+		
 		@Override
 		public void action() {
 			ACLMessage msg = receive(); 
 			if (msg != null) { 
 				if (msg.getPerformative() == ACLMessage.REQUEST) { 
-					// Cria objeto informaÁ„o e preenche com posiÁ„o e velocidade
+					// Cria objeto informa√ß√£o e preenche com posi√ß√£o e velocidade
 					Informacao i = new Informacao();  
 					i.setPosicao(fire.getPosicao()); 
 					i.setVelocidade(fire.getVelocidade()); 
@@ -107,12 +153,63 @@ public class FirefightersAgent extends Agent{
 						e.printStackTrace();
 					}
 					reply.setPerformative(ACLMessage.PROPOSE);
-					System.out.println("Agente " + fire.getLocalName() + " enviou informaÁ„o " + i.getVelocidade());
+					System.out.println("Agente " + fire.getLocalName() + " enviou informaÔøΩÔøΩo " + i.getVelocidade());
 					send(reply);
-				// caso seja escolhido para apagar um incÍndio
+				// caso seja escolhido para apagar um inc√™ndio
 				} else if (msg.getPerformative() == ACLMessage.PROPOSE) { 
-					fire.setDisponivel(false);
-					System.out.println("FUI ESCOLHIDO " + fire.getName());
+					// Desencapsula a posi√ß√£o do inc√™ndio e o tempo que demora a chegar ao inc√™ndio
+					try {
+						InfoEscolhido i = (InfoEscolhido) msg.getContentObject();
+						Posicao inc = i.getPosicao(); 
+						double tempo_a_chegar = i.getTempo(); 
+						boolean possui = verificaCombustivel(inc); 
+						// caso possua recuros suficientes para apagar o inc√™ndio move-se para esse inc√™ndio
+						if (possui == true && fire.getCapAtAgua() > 0 && fire.getDisponivel() == true) { 
+							ACLMessage reply = msg.createReply(); 
+							reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL); 
+							System.out.println("Tenho combustivel e √°gua suficiente, e aceitei a proposta\n");
+							try {
+								reply.setContentObject(i);
+							} catch (IOException e) {
+								e.printStackTrace();
+							} 
+							fire.setDisponivel(false); 
+							/* 
+							 * 	FALTA METER FUN√á√ÉO PARA MOVER
+							 */
+							send(reply);
+						// caso contr√°rio se o agente se encontra indespon√≠vel refusa a proposta 
+						} else if (fire.getDisponivel() == false) { 
+							ACLMessage reply = msg.createReply(); 
+							reply.setPerformative(ACLMessage.REFUSE);  
+							try {
+								reply.setContentObject(i);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							System.out.println("N√£o estou disponivel!\n");
+							send(reply);
+						
+						// n√£o possui recursos suficientes mas mesmo assim calcula o tempo que demora a abastecer+apagar 
+						// e manda para o quartelagent avaliar a proposta
+						} else {  
+							// retorna posto abastecimento mais perto do agente
+							Posicao posto_mais_perto = postoAbastecimentoMaisPerto(QuartelAgent.lista_combustiveis);
+							// calcula o tempo de ir abastecer + tempo de se mover para inc√™ndio
+							double t = calculaTempo(posto_mais_perto,i.getPosicao()); 
+							i.setTempo(t);
+							ACLMessage reply = msg.createReply(); 
+							try {
+								reply.setContentObject(i);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							System.out.println("Enviei counter proposal para quartel: " + t);
+							send(reply);
+						}
+					} catch (UnreadableException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 			
