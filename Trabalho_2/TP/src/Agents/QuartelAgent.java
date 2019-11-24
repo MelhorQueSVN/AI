@@ -52,9 +52,14 @@ public class QuartelAgent extends Agent {
 		lista_combustiveis = new ArrayList<>(); 
 		lista_aguas = new ArrayList<>();
 		
-		/* 
-		 * 	Declara posicões dos postos de combustível
-		 */
+		// declaração dos métodos que adicionam posições dos pontos de combustível e abastecimentos água
+		addPosicoesComb(); 
+		addPosicoesAgua(); 
+		
+		addBehaviour(new RecebePedidosInc(this)); 
+	} 
+	
+	public void addPosicoesComb() { 
 		Posicao c_p1 = new Posicao(10,12); 
 		Posicao c_p2 = new Posicao(60,30); 
 		Posicao c_p3 = new Posicao(30,47); 
@@ -65,10 +70,9 @@ public class QuartelAgent extends Agent {
 		lista_combustiveis.add(c_p3); 
 		lista_combustiveis.add(c_p4); 
 		lista_combustiveis.add(c_p5);
-		
-		/* 
-		 * Declara posições dos postos de abastecimento de água 
-		 */ 
+	} 
+	
+	public void addPosicoesAgua() {
 		Posicao a_p1 = new Posicao(12,50); 
 		Posicao a_p2 = new Posicao(73,13); 
 		Posicao a_p3 = new Posicao(84,41); 
@@ -79,9 +83,7 @@ public class QuartelAgent extends Agent {
 		lista_aguas.add(a_p3); 
 		lista_aguas.add(a_p4); 
 		lista_aguas.add(a_p5);
-		
-		addBehaviour(new RecebePedidosInc(this)); 
-	} 
+	}
 	
 	public List<InfoIncendio> getInfoIncendios(){ 
 		return this.infoIncendios;

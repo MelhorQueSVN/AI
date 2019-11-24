@@ -44,9 +44,9 @@ public class FirefightersAgent extends Agent{
 		int cord_x = (int) rand.nextInt(101); 
 		int cord_y = (int) rand.nextInt(101);
 		p.setCordX(cord_x); 
-		p.setCordY(cord_y);
+		p.setCordY(cord_y); 
 		// coloca-se como disponível todos os agentes 
-		this.disponivel = false;
+		this.disponivel = false; 
 		
 		/* 
 		 * 	Regista os agentes firefighters nas p�ginas amarelas 
@@ -65,7 +65,7 @@ public class FirefightersAgent extends Agent{
 		}
 		
 		// cyclic behaviour para processar pedidos.
-		addBehaviour(new RecebePedidos(this));
+		addBehaviour(new RecebePedidos(this)); 
 	} 
 	
 	/* 
@@ -85,6 +85,30 @@ public class FirefightersAgent extends Agent{
 	public int getVelocidade() {return this.velocidade;} 
 	public Posicao getPosicao() {return this.p;} 
 	public boolean getDisponivel() {return this.disponivel;}
+	
+	// função com o intuito de abastecer o combustível.
+	public void abasteceCombustivel() throws InterruptedException { 
+		// obtem a lista de combustiveis do quartelagent.
+		List<Posicao> lista_combustiveis = QuartelAgent.lista_combustiveis; 
+		for(Posicao p : lista_combustiveis) { 
+			if (p.getCordX() == this.p.getCordX() && p.getCordY() == this.p.getCordY()) {
+				this.cap_atual_comb = this.cap_max_comb; 
+				Thread.sleep(1000);
+			}
+		}
+	} 
+	
+	// função com o intuito de abastecer a água.
+	public void abasteceAgua() throws InterruptedException { 
+		// obtem a lista de abastecimento de agua do quartelagent
+		List<Posicao> lista_agua = QuartelAgent.lista_aguas; 
+		for(Posicao p : lista_agua) { 
+			if (p.getCordX() == this.p.getCordX() && p.getCordY() == this.p.getCordY()) { 
+				this.cap_atual_comb = this.cap_max_comb; 
+				Thread.sleep(1000);
+			}
+		}
+	}  
 	
 	public class RecebePedidos extends CyclicBehaviour{
 		
@@ -153,7 +177,7 @@ public class FirefightersAgent extends Agent{
 						e.printStackTrace();
 					}
 					reply.setPerformative(ACLMessage.PROPOSE);
-					System.out.println("Agente " + fire.getLocalName() + " enviou informa��o " + i.getVelocidade());
+					System.out.println("Agente " + fire.getLocalName() + " enviou informacao " + i.getVelocidade());
 					send(reply);
 				// caso seja escolhido para apagar um incêndio
 				} else if (msg.getPerformative() == ACLMessage.PROPOSE) { 
