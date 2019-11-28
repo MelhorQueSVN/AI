@@ -18,7 +18,7 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 
-public class FirefightersAgent extends Agent{
+public class FirefightersAgent extends Agent implements Cloneable{
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -118,7 +118,90 @@ public class FirefightersAgent extends Agent{
 			}
 		}
 		return verificar;
-	}  
+	}   
+		
+	/* 
+	 * 	Retorna o index corresponde ao caminho mais curto, testando as 4 opções diferentes de modo 
+	 * 	a chegar ao destino, o index irá ter os seguintes significados: 
+	 * 		0 -> cima 
+	 * 		1 -> baixo 
+	 * 		2 -> direita 
+	 * 		3 -> esquerda 
+	 * 	Estas transformações são de seguidas aplicadas no firefightersagents.
+	 */
+	public ArrayList<Integer> calculaProximo(Posicao destino,Posicao inicio) { 
+		ArrayList<Double> distancias = new ArrayList<>();
+		ArrayList<Integer> indexes = new ArrayList<>();
+
+		Posicao posicao_fire = new Posicao(); 
+		try {
+			posicao_fire = (Posicao) inicio.clone();
+		} catch (CloneNotSupportedException e) {
+			e.printStackTrace();
+		}
+		
+		int i = 0;
+		while (posicao_fire.getCordX() != destino.getCordX() && posicao_fire.getCordY() != destino.getCordY()) {
+			// para cima 
+			double dist_cima = Math.sqrt(Math.pow(( posicao_fire.getCordX() - destino.getCordX()),2) 
+						+ Math.pow(( (posicao_fire.getCordY()+1) - destino.getCordY()),2));  
+			
+			// para baixo
+			double dist_baixo = Math.sqrt(Math.pow(( posicao_fire.getCordX() - destino.getCordX()),2) 
+		   				+ Math.pow(( (posicao_fire.getCordY()-1) - destino.getCordY()),2));  
+			
+			// para direita 
+			double dist_direita = Math.sqrt(Math.pow(( (posicao_fire.getCordX()+1) - destino.getCordX()),2) 
+		   				+ Math.pow((posicao_fire.getCordY() - destino.getCordY()),2));   
+			
+			// para esquerda 
+			double dist_esquerda = Math.sqrt(Math.pow(( (posicao_fire.getCordX()-1) - destino.getCordX()),2) 
+		   				+ Math.pow((posicao_fire.getCordY() - destino.getCordY()),2));   
+			
+			distancias.add(dist_cima); 
+			distancias.add(dist_baixo); 
+			distancias.add(dist_direita); 
+		    distancias.add(dist_esquerda); 				
+			
+		    Collections.sort(distancias);
+
+			if (distancias.get(0) == dist_cima) { 
+				i = 0; 
+				System.out.println("i cima " + i); 
+				posicao_fire.setCordY(posicao_fire.getCordY()+1);
+				distancias.clear();
+				indexes.add(i);
+			} 
+			else if (distancias.get(0) == dist_baixo) {
+				i = 1;   
+				System.out.println("i baixo " + i);  
+				posicao_fire.setCordY(posicao_fire.getCordY()-1);
+				// faz clear
+				distancias.clear();
+				indexes.add(i);
+			}
+			else if (distancias.get(0) == dist_direita) { 
+				i = 2;  
+				System.out.println("i dir " + i);  
+				posicao_fire.setCordX(posicao_fire.getCordX()+1);
+				// faz clear
+				distancias.clear();;
+				indexes.add(i);
+			}
+			else if (distancias.get(0) == dist_esquerda) { 
+				i = 3;  
+				System.out.println("i esq " + i);  
+				posicao_fire.setCordX(posicao_fire.getCordX()-1);
+				// faz clear
+				distancias.clear();;
+				indexes.add(i);
+			}
+		}  
+		
+		return indexes;
+	}
+	
+	
 	
 	public class RecebePedidos extends CyclicBehaviour{
 		
@@ -133,10 +216,9 @@ public class FirefightersAgent extends Agent{
 		public boolean verificaCombustivel(Posicao p) { 
 			Posicao pos_agent = fire.getPosicao();
 			// gasta 0.1 de combustível por cada movimento
-			float gasto_comb = (float) 0.2;
-			double dist =  Math.sqrt(Math.pow((p.getCordX() - pos_agent.getCordX()),2) 
-						   + Math.pow((p.getCordY() - pos_agent.getCordY()),2));   
-			double comb_necessario = dist * gasto_comb; 
+			float gasto_comb = (float) 0.1;
+			ArrayList<Integer> cam = calculaProximo(p,fire.getPosicao()); 
+			double comb_necessario = cam.size() * gasto_comb; 	// multiplica o numero de casas pelo gasto
 			if (comb_necessario > fire.getCapAtComb()) { 
 				return false;
 			} else { 
@@ -146,14 +228,15 @@ public class FirefightersAgent extends Agent{
 		
 		// retorna posição do posto de abastecimento + próximo
 		public Posicao postoAbastecimentoMaisPerto(List<Posicao> abastecimentos) { 
-			Posicao pos_agent = fire.getPosicao(); 
 			Posicao pos_min = new Posicao(); 
-			double dist_min = 1000;
+			int size_min = 1000;
+			int size_at = 0;
+			ArrayList<Integer> cam = new ArrayList<>();
 			for (Posicao p : abastecimentos) { 
-				double dist = Math.sqrt(Math.pow((p.getCordX() - pos_agent.getCordX()),2) 
-						   + Math.pow((p.getCordY() - pos_agent.getCordY()),2));   
-				if (dist < dist_min) { 
-					dist_min = dist; 
+				cam = calculaProximo(p,fire.getPosicao()); 
+				size_at = cam.size(); 
+				if (size_at < size_min) { 
+					size_min = size_at; 
 					pos_min = p;
 				}
 			}
@@ -162,45 +245,12 @@ public class FirefightersAgent extends Agent{
 		
 		// calcula o tempo que demora a abastecer e a chegar ao incêndio
 		public double calculaTempo( Posicao p, Posicao inc) { 
-			Posicao pos_agent = fire.getPosicao();
-			double dist_ag_abastecer = Math.sqrt(Math.pow((p.getCordX() - pos_agent.getCordX()),2) 
-					   + Math.pow((p.getCordY() - pos_agent.getCordY()),2));  
-			double dist_ab_inc = Math.sqrt(Math.pow((p.getCordX() - inc.getCordX()),2) 
-					   + Math.pow((p.getCordY() - inc.getCordY()),2));  
+			double dist_ag_abastecer = calculaProximo(p,fire.getPosicao()).size();
+			double dist_ab_inc = calculaProximo(p,inc).size();
 			double dist_total = dist_ag_abastecer + dist_ab_inc; 
 			return (dist_total)/(fire.getVelocidade());
 		} 
 		
-		/* 
-		 * 	Retorna o index corresponde ao caminho mais curto, testando as 4 opções diferentes de modo 
-		 * 	a chegar ao destino, o index irá ter os seguintes significados: 
-		 * 		0 -> cima 
-		 * 		1 -> baixo 
-		 * 		2 -> direita 
-		 * 		3 -> esquerda 
-		 * 	Estas transformações são de seguidas aplicadas no firefightersagents.
-		 */
-		public int calculaProximo(Posicao destino) { 
-			ArrayList<Double> distancias = new ArrayList<>();
-			ArrayList<Integer> indexes = new ArrayList<>();
-			
-				// para cima 
-				double dist_cima = Math.sqrt(Math.pow(( (fire.getPosicao().getCordX()+1) - destino.getCordX()),2) 
-							+ Math.pow((fire.getPosicao().getCordY() - destino.getCordY()),2)); 
-				// para baixo
-				double dist_baixo = Math.sqrt(Math.pow(( (fire.getPosicao().getCordX()-1) - destino.getCordX()),2) 
-			   				+ Math.pow((fire.getPosicao().getCordY() - destino.getCordY()),2)); 
-				// para direita
-				double dist_direita = Math.sqrt(Math.pow((fire.getPosicao().getCordX() - destino.getCordX()),2) 
-			   				+ Math.pow(((fire.getPosicao().getCordY()+1) - destino.getCordY()),2));  
-				// para esquerda 
-				double dist_esquerda = Math.sqrt(Math.pow((fire.getPosicao().getCordX() - destino.getCordX()),2) 
-			   				+ Math.pow(((fire.getPosicao().getCordY()-1) - destino.getCordY()),2));   
-			Collections.addAll(distancias,dist_cima,dist_baixo,dist_direita,dist_esquerda);  
-			int min_index = distancias.indexOf(Collections.min(distancias));  
-			return min_index;
-				
-		}
 		
 		@Override
 		public void action() {
@@ -241,35 +291,38 @@ public class FirefightersAgent extends Agent{
 							send(reply);
 			
 							fire.setDisponivel(false); 
-							
-							// função de movimento para a posição do fogo
-							while (fire.getPosicao().getCordX() != inc.getCordX() 
-								  && fire.getPosicao().getCordY() != inc.getCordY()) { 
-								int ordem = calculaProximo(inc);
-								switch(ordem) { 
-									case 0 : fire.getPosicao().setCordX(fire.getPosicao().getCordX() + 1); 
+							System.out.println("Cheguei aqui, e tenho posicao " + fire.getPosicao().getCordX() + " " + fire.getPosicao().getCordY());
+							ArrayList<Integer> caminho_ind = calculaProximo(inc,fire.getPosicao()); 
+							System.out.println("Firefigheer escolhido after cam: " 
+											 + fire.getPosicao().getCordX() + " " + fire.getPosicao().getCordY());
+							for (int indice : caminho_ind) { 
+								switch (indice) { 
+									case 0 : fire.getPosicao().setCordY(fire.getPosicao().getCordY()+1);  
 											 break; 
-									case 1 : fire.getPosicao().setCordX(fire.getPosicao().getCordX() - 1); 
+									case 1 : fire.getPosicao().setCordY(fire.getPosicao().getCordY()-1);  
 											 break; 
-									case 2 : fire.getPosicao().setCordY(fire.getPosicao().getCordY() + 1); 
+									case 2 : fire.getPosicao().setCordX(fire.getPosicao().getCordX()+1); 
 											 break; 
-									case 3 : fire.getPosicao().setCordY(fire.getPosicao().getCordY() - 1); 
+									case 3 : fire.getPosicao().setCordX(fire.getPosicao().getCordX()-1);  
 											 break; 
+									
 									default : break;
 								}
-								System.out.println("Nova Posicao agente: " + fire.getLocalName() 
-												+ "( " + fire.getPosicao().getCordX() + " , " 
-												+ fire.getPosicao().getCordY() + " )");
+								
+								System.out.println(" " + fire.getLocalName() + " ( " + fire.getPosicao().getCordX() 
+												 + " , " + fire.getPosicao().getCordY() + " )");
+								
 								try {
 									int velocidade_agente = fire.getVelocidade();
 									Thread.sleep(500/velocidade_agente);
 								} catch (InterruptedException e) {
 									e.printStackTrace();
 								}
-								// decrementa o combustivel a cada movimento
-								fire.setCapAtComb((float) (fire.getCapAtComb()-0.2));
+								
+								fire.setCapAtComb((float) (fire.getCapAtComb()-0.1));
 								System.out.println("Combustivel agente: " + fire.getCapAtComb());
-							} 
+							}
+							
 							
 							// demora 1 segundo a apagar o incêndio
 							try {
