@@ -186,7 +186,8 @@ public class QuartelAgent extends Agent {
 						quartel.getInfoAgentes().put(fire,i);
 						recebidos++; 
 						// espera que receba todos os proposals dos firefighters
-						if (recebidos == num_agents) { 
+						if (recebidos == num_agents) {  
+							System.out.println("Recebi de todos os agentes " + recebidos);
 							inf = mais_rapido(quartel.getInfoAgentes(),inc_a_apagar); 
 							ACLMessage msg_escolhido = new ACLMessage(ACLMessage.PROPOSE);  
 							msg_escolhido.addReceiver(inf.getAgente());
@@ -197,6 +198,8 @@ public class QuartelAgent extends Agent {
 							} 
 							System.out.println("Enviada mensagem para agente mais rápido " + inf.getAgente());
 							send(msg_escolhido);
+							// faz reset do recebidos;
+							recebidos = 0;
 						}
 					
 					} catch (UnreadableException e) {
@@ -219,6 +222,43 @@ public class QuartelAgent extends Agent {
 							e.printStackTrace();
 						} 
 						send(msg_segundo_escolhido); 
+					} catch (UnreadableException e) {
+						e.printStackTrace();
+					} 
+				// testa se recebeu uma call for proposal do firefighteragents
+				} else if (msg.getPerformative() == ACLMessage.CFP) { 
+					InfoEscolhido inf;
+					try {
+						inf = (InfoEscolhido) msg.getContentObject();
+						AID recebido = inf.getAgente(); 
+						double t = inf.getTempo(); 
+						infoAgentes.remove(recebido); 
+						InfoEscolhido mais_rapido = mais_rapido(quartel.getInfoAgentes(),inf.getPosicao());   
+						double segundo_tempo = mais_rapido.getTempo(); 
+						// se o tempo recebido continua a ser menor então aceita o CFP enviado 
+						if (t < segundo_tempo) { 
+							ACLMessage reply = msg.createReply(); 
+							reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL); 
+							try {
+								reply.setContentObject(inf);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							send(reply);
+					// envia mensagem para segundo mais rápido se o tempo recebido for mais lento
+						} else { 
+							AID segundo_mais_rapido = mais_rapido.getAgente(); 
+							ACLMessage new_msg = new ACLMessage(); 
+							new_msg.setPerformative(ACLMessage.PROPOSE); 
+							new_msg.addReceiver(segundo_mais_rapido); 
+							try {
+								new_msg.setContentObject(mais_rapido);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							send(new_msg);
+						}
+					
 					} catch (UnreadableException e) {
 						e.printStackTrace();
 					} 
