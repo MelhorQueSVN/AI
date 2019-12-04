@@ -62,8 +62,10 @@ public class MainContainer {
 		// inicializa o agente quartel
 		a.startAgentInPlatform("quartel", "Agents.QuartelAgent");
 		
-		// inicializa o agente incendiário 
-		a.startAgentInPlatform("incendiario", "Agents.IncendiarioAgent");
+		a.startAgentInPlatform("interface", "Agents.InterfaceAgent");
+		
+		// inicializa o agente incendiï¿½rio  
+		a.startAgentInPlatform("incendiario", "Agents.IncendiarioAgent"); 
 		
 		// inicializa 10 drones 
 		int size_d = 10;
@@ -71,7 +73,7 @@ public class MainContainer {
 			a.startAgentInPlatform("drone" + i, "Agents.DroneAgent");
 		} 
 		
-		// inicaliza 5 camiões 
+		// inicaliza 5 camiï¿½es 
 		int size_c = 5;
 		for(int i=0;i<size_c;i++) { 
 			a.startAgentInPlatform("camiao" + i, "Agents.CamiaoAgent");
@@ -82,5 +84,7 @@ public class MainContainer {
 		for(int i=0;i<size_a;i++) { 
 			a.startAgentInPlatform("aeronave" + i, "Agents.AeronaveAgent");
 		}
+		
+		
 	} 
 }

@@ -19,7 +19,7 @@ public class IncendiarioAgent extends Agent {
 	private Posicao p;
 	
 	public void setup() {
-		// cria novo incêndio a cada 10 segundos.
+		// cria novo incï¿½ndio a cada 10 segundos. 
 		addBehaviour(new EnviaPosicaoIncendio(this,10000));
 	}
 
@@ -35,14 +35,14 @@ public class IncendiarioAgent extends Agent {
 		@Override
 		protected void onTick() {
 			ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-			// Cria objeto posicao com posição aleatória do incêndio
+			// Cria objeto posicao com posiï¿½ï¿½o aleatï¿½ria do incï¿½ndio
 			Posicao p = new Posicao(); 
 			Random rand = new Random();
 			int cord_x = (int) rand.nextInt(101); 
 			int cord_y = (int) rand.nextInt(101);
 			p.setCordX(cord_x); 
 			p.setCordY(cord_y); 
-			// cria objeto infoincêndio para mandar
+			// cria objeto infoincï¿½ndio para mandar
 			InfoIncendio inf = new InfoIncendio(); 
 			inf.setPosicao(p);  
 			inf.setGravidade(0); 
@@ -51,7 +51,7 @@ public class IncendiarioAgent extends Agent {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}  
-			// agora pesquisa nas páginas amarelas pelo quartel 
+			// agora pesquisa nas pï¿½ginas amarelas pelo quartel 
 			DFAgentDescription template = new DFAgentDescription(); 
 			ServiceDescription sd = new ServiceDescription(); 
 			sd.setType("quartel"); 
@@ -60,18 +60,46 @@ public class IncendiarioAgent extends Agent {
 			try {
 				disponiveis = DFService.search(myAgent, template); 
 				if (disponiveis.length > 0) { 
-					msg.addReceiver( disponiveis[0].getName()); 
+					msg.addReceiver( disponiveis[0].getName());  
+					System.out.println("WADWDWD: " + disponiveis[0].getName());
 					/*
 					for(int i=0;i<disponiveis.length;i++) { 
 						System.out.println(disponiveis[i].getName());
 					} 
 					*/
-					System.out.println("Criei novo incêndio na posição: " + inf.getPos().getCordX() + " " + inf.getPos().getCordY());
+					System.out.println("Criei novo incï¿½ndio na posiï¿½ï¿½o: " + inf.getPos().getCordX() + " " + inf.getPos().getCordY());
 					send(msg);
+				} 	
+			} catch (FIPAException e) {
+				e.printStackTrace();
+			} 
+			
+			/* 
+			 * 	ENVIAR PARA A INTERFACE A POSIÃ‡ÃƒO CRIADA DO INCÃŠNDIO
+			 */
+			ACLMessage msg_int = new ACLMessage(ACLMessage.INFORM); 
+			try {
+				msg_int.setContentObject(p);
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			} 
+
+			
+			DFAgentDescription template_int = new DFAgentDescription(); 
+			ServiceDescription sd_int = new ServiceDescription(); 
+			sd_int.setType("interfaceAG"); 
+			template_int.addServices(sd_int); 
+			DFAgentDescription[] disponiveis_int;   
+			try {
+				disponiveis_int = DFService.search(myAgent, template_int);
+				if (disponiveis_int.length > 0) { 
+					msg_int.addReceiver(disponiveis_int[0].getName()); 
+					send(msg_int);
 				}
 			} catch (FIPAException e) {
 				e.printStackTrace();
-			}
+			} 
+			
 			
 		} 
 		

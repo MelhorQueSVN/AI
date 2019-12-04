@@ -10,6 +10,7 @@ import Classes.InfoEscolhido;
 import Classes.InfoIncendio;
 import Classes.Informacao;
 import Classes.Posicao;
+import Container.Map;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -29,7 +30,8 @@ public class QuartelAgent extends Agent {
 	private HashMap<AID,Informacao> infoAgentes; 
 	private List<InfoIncendio> infoIncendios;  
 	public static List<Posicao> lista_combustiveis; 
-	public static List<Posicao> lista_aguas;
+	public static List<Posicao> lista_aguas; 
+	public Map inter;
 	
 	public void setup() { 
 		
@@ -55,7 +57,7 @@ public class QuartelAgent extends Agent {
 		// declaração dos métodos que adicionam posições dos pontos de combustível e abastecimentos água
 		addPosicoesComb(); 
 		addPosicoesAgua(); 
-		
+	
 		addBehaviour(new RecebePedidosInc(this)); 
 	} 
 	
@@ -117,14 +119,11 @@ public class QuartelAgent extends Agent {
 			for(Entry<AID,Informacao> entry : agentes.entrySet()) { 
 				dist_atual =  Math.sqrt(Math.pow((p.getCordX() - entry.getValue().getPos().getCordX()),2) 
 							+ Math.pow((p.getCordY() - entry.getValue().getPos().getCordY()),2));  
-				System.out.println("DIST�NCIA ENTRE AGENTE E FOGO: " + dist_atual);
 				rapido_atual = (dist_atual) / (entry.getValue().getVelocidade());  
-				System.out.println("rapido_atual " + rapido_atual);
 				atual = entry.getKey();
 				if (rapido_atual < rapido_min) { 
 					rapido_min = rapido_atual; 
 					min = atual; 
-					System.out.println("AGENTE MIN: " + min);
 				}
 			} 
 			i.setPosicao(p);
@@ -262,7 +261,6 @@ public class QuartelAgent extends Agent {
 					} catch (UnreadableException e) {
 						e.printStackTrace();
 					} 
-				}
 			}
 		} 
 		
@@ -282,7 +280,6 @@ public class QuartelAgent extends Agent {
 			ACLMessage msgFire = new ACLMessage(ACLMessage.REQUEST); 
 			msgFire.addReceiver(dest);
 			msgFire.setContent("");  
-			System.out.println("Mandei mensagem para firefighters!\n");
 			send(msgFire); 
 			this.finished = true;
 		}
@@ -293,5 +290,5 @@ public class QuartelAgent extends Agent {
 		} 
 		
 	}
-	
+	}  
 }
