@@ -108,6 +108,7 @@ public class Map extends JPanel{
     }
     
     public void updateIncendios(List<Posicao> posicoes) { 
+    	frame.setVisible(false);
     	for (Posicao p : posicoes) 
     		this.terrainGrid[p.getCordX()][p.getCordY()] = this.INCEN;
     	
