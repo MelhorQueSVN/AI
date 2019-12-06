@@ -1,13 +1,17 @@
 package Agents;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import Classes.Posicao;
@@ -30,7 +34,8 @@ public class InterfaceAgent extends Agent {
     public static List<Posicao> lista_inc = new ArrayList();
     public Mapa mapa = new Mapa(); 
     public int conta_inc_apagados = 0; 
-    public List<String> agentes_apagaram = new ArrayList(); 
+    public List<String> agentes_apagaram = new ArrayList();  
+    public String[] ags_unicos;
     public long time_now; 
     public long time_after; 
     public long elapsed_time; 
@@ -110,8 +115,7 @@ public class InterfaceAgent extends Agent {
                     time_after = 0;
                 	// contador do número de incêndios apagados 
                 	conta_inc_apagados++;
-                	agentes_apagaram.add(msg.getSender().getLocalName());
-                	
+                	agentes_apagaram.add(msg.getSender().getLocalName()); 
                 	
                 	Posicao p = null;
                     try {
@@ -167,9 +171,24 @@ public class InterfaceAgent extends Agent {
 			for (Long a : tempos_apagar_incendios) { 
 				sum += a;
 			}
-			return (sum / tam);
-			
+			return (sum / tam);	
+		} 
+		
+		private double round( double val )
+		{
+		    if( val < 0 ) return (val - 0.5);
+		    return (val + 0.5);
 		}
+		
+		private double removeDuplicates(){
+			String[] stringArray = agentes_apagaram.toArray(new String[0]);
+			Set<String> uniqueWords = new HashSet<String>(Arrays.asList(stringArray));  
+			double size_set = uniqueWords.size(); 
+			double value = size_set/17;  
+			// para adicionar mais casas decimais base adicionar zeros nos números 1...d
+			double value_rounded = 100 * ((double)Math.round(value * 10000d) / 10000d);
+			return value_rounded;
+		} 
 		
 		@Override
 		protected void onTick() { 
@@ -178,6 +197,7 @@ public class InterfaceAgent extends Agent {
 			System.out.println("Agente que apagou mais incêndios: " + getMostFrequent(agentes_apagaram)); 
 			System.out.println("Tempos entre surgimento e extinção do incêndio: " + tempos_apagar_incendios.toString()); 
 			System.out.println("Média dos tempos: " + mediaTempos(tempos_apagar_incendios));
+			System.out.println("Percentagem de agentes utilizados: " + removeDuplicates() + "%");
 			System.out.println("\n*****************************************************************\n"); 
 		} 
     	
