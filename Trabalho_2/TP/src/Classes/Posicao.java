@@ -30,8 +30,16 @@ public class Posicao implements java.io.Serializable, Cloneable {
 
 	public void setCordY(int y) { 
 		this.cord_y = y;
+	} 
+	
+	public boolean equals(Posicao p) {
+		if (p == null) return false;
+		if (p == this) return true;
+		if (!(p instanceof Posicao)) return false;
+		Posicao o = (Posicao) p;
+		return o.getCordX() == this.getCordX() && o.getCordY() == this.getCordY();
 	}
-
+	
 	public Object clone() throws CloneNotSupportedException { 
 		return super.clone();
 	}

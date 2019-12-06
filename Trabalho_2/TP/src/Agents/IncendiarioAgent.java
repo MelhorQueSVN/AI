@@ -19,8 +19,9 @@ public class IncendiarioAgent extends Agent {
 	private Posicao p;
 	
 	public void setup() {
-		// cria novo inc�ndio a cada 10 segundos. 
-		addBehaviour(new EnviaPosicaoIncendio(this,10000));
+		// cria novo inc�ndio aleatoriamente entre 10 segundos a 13
+		int r = (int) (Math.random() * (13000 - 10000)) + 10000; 
+		addBehaviour(new EnviaPosicaoIncendio(this,r));
 	}
 
 	public class EnviaPosicaoIncendio extends TickerBehaviour{
@@ -41,12 +42,13 @@ public class IncendiarioAgent extends Agent {
 			int cord_x = (int) rand.nextInt(101); 
 			int cord_y = (int) rand.nextInt(101);
 			p.setCordX(cord_x); 
-			p.setCordY(cord_y); 
+			p.setCordY(cord_y);  
+			System.out.println("Incêndio começou na posição: ( " + cord_x + ", " + cord_y + " )");
 			// cria objeto infoinc�ndio para mandar
 			InfoIncendio inf = new InfoIncendio(); 
 			inf.setPosicao(p);  
 			inf.setGravidade(0); 
-			try {
+			try { 
 				msg.setContentObject(inf);
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -61,13 +63,6 @@ public class IncendiarioAgent extends Agent {
 				disponiveis = DFService.search(myAgent, template); 
 				if (disponiveis.length > 0) { 
 					msg.addReceiver( disponiveis[0].getName());  
-					System.out.println("WADWDWD: " + disponiveis[0].getName());
-					/*
-					for(int i=0;i<disponiveis.length;i++) { 
-						System.out.println(disponiveis[i].getName());
-					} 
-					*/
-					System.out.println("Criei novo inc�ndio na posi��o: " + inf.getPos().getCordX() + " " + inf.getPos().getCordY());
 					send(msg);
 				} 	
 			} catch (FIPAException e) {
